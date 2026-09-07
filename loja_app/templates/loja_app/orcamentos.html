@@ -1,0 +1,56 @@
+<style>
+    * {
+        box-sizing: border-box;
+        font-family: Arial, sans-serif;
+    }
+
+    body {
+        margin: 0;
+        background: #f4f6fb;
+        padding: 30px;
+    }
+
+    h2 {
+        color: #1f2937;
+    }
+
+    a {
+        display: inline-block;
+        margin-bottom: 20px;
+        text-decoration: none;
+        background: #2563eb;
+        color: white;
+        padding: 10px 16px;
+        border-radius: 8px;
+        font-weight: bold;
+    }
+
+    ul {
+        list-style: none;
+        padding: 0;
+    }
+
+    li {
+        background: white;
+        padding: 12px 16px;
+        border-radius: 8px;
+        margin-bottom: 10px;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+    }
+</style>
+
+<h2>Orçamentos</h2>
+
+<a href="{% url 'novo_orcamento' %}">Novo orçamento</a>
+
+<ul>
+    {% for orcamento in orcamentos %}
+        <li>
+            Cliente: {{ orcamento.cliente.nome }} |
+            Status: {{ orcamento.status }} |
+            Total: R$ {{ orcamento.valor_total }}
+        </li>
+    {% empty %}
+        <li>Nenhum orçamento cadastrado.</li>
+    {% endfor %}
+</ul>

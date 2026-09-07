@@ -1,0 +1,91 @@
+<style>
+    * {
+        box-sizing: border-box;
+        font-family: Arial, sans-serif;
+    }
+
+    body {
+        margin: 0;
+        background: #f4f6fb;
+        padding: 30px;
+    }
+
+    h2 {
+        color: #1f2937;
+        margin-bottom: 20px;
+    }
+
+    form {
+        max-width: 500px;
+        background: white;
+        padding: 25px;
+        border-radius: 12px;
+        box-shadow: 0 3px 10px rgba(0,0,0,0.08);
+    }
+
+    input, select, textarea, button {
+        width: 100%;
+        display: block;
+        margin-bottom: 15px;
+        padding: 12px 14px;
+        border: 1px solid #d1d5db;
+        border-radius: 8px;
+        font-size: 16px;
+    }
+
+    button {
+        background: #2563eb;
+        color: white;
+        border: none;
+        font-weight: bold;
+        cursor: pointer;
+    }
+
+    button:hover {
+        background: #1d4ed8;
+    }
+</style>
+
+<h2>Cadastrar Cliente</h2>
+
+<form method="post">
+    {% csrf_token %}
+
+    <input type="text" name="nome" placeholder="Nome">
+    <input type="text" name="telefone" placeholder="Telefone">
+    <input type="text" id="cep" name="cep" placeholder="CEP">
+    <input type="text" id="rua" name="rua" placeholder="Rua">
+    <input type="text" name="numero" placeholder="Número">
+    <input type="text" id="bairro" name="bairro" placeholder="Bairro">
+    <input type="text" id="cidade" name="cidade" placeholder="Cidade">
+    <input type="text" id="estado" name="estado" placeholder="Estado">
+
+    <button type="submit">Salvar</button>
+</form>
+
+<script>
+    document.getElementById('cep').addEventListener('blur', function () {
+        let cep = this.value.replace(/\D/g, '');
+
+        if (cep.length !== 8) {
+            return;
+        }
+
+        fetch(`https://viacep.com.br/ws/${cep}/json/`)
+            .then(response => response.json())
+            .then(data => {
+                if (data.erro) {
+                    alert("CEP não encontrado.");
+                    return;
+                }
+
+                document.getElementById('rua').value = data.logradouro || '';
+                document.getElementById('bairro').value = data.bairro || '';
+                document.getElementById('cidade').value = data.localidade || '';
+                document.getElementById('estado').value = data.uf || '';
+            })
+            .catch(() => {
+                alert("Erro ao buscar o CEP.");
+            });
+    });
+</script>
