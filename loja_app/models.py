@@ -44,8 +44,7 @@ class Orcamento(models.Model):
     cliente = models.ForeignKey(Cliente, on_delete=models.CASCADE)
     descricao = models.TextField(blank=True, null=True)
     data_criacao = models.DateTimeField(auto_now_add=True)
-    status = models.CharField(
-        max_length=20,
+    status = models.CharField(max_length=20,
         choices=[
             ("Rascunho", "Rascunho"),
             ("Enviado", "Enviado"),
