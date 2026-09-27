@@ -1,114 +1,67 @@
-<!DOCTYPE html>
-<html lang="pt-br">
-<head>
-    <meta charset="UTF-8">
-    <title>Loja - Dashboard</title>
+{% extends 'loja_app/base.html' %}
 
-    <style>
-        * {
-            box-sizing: border-box;
-            font-family: Arial, sans-serif;
-        }
+{% block content %}
+<section class="panel service-list">
+    <div class="panel-header">Produtos em estoque</div>
+    <div class="table-wrapper">
+        <table>
+            <thead><tr><th>Produto</th><th>Quantidade</th><th>Preço</th></tr></thead>
+            <tbody>
+                {% for produto in produtos %}
+                    <tr><td>{{ produto.nome }}</td><td>{{ produto.quantidade }}</td><td>R$ {{ produto.preco }}</td></tr>
+                {% empty %}
+                    <tr><td colspan="3">Nenhum produto cadastrado.</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</section>
 
-        body {
-            margin: 0;
-            background: #f4f6fb;
-            color: #222;
-        }
+<section class="panel service-list">
+    <div class="panel-header">Clientes</div>
+    <div class="table-wrapper">
+        <table>
+            <thead><tr><th>Cliente</th><th>Telefone</th></tr></thead>
+            <tbody>
+                {% for cliente in clientes %}
+                    <tr><td>{{ cliente.nome }}</td><td>{{ cliente.telefone }}</td></tr>
+                {% empty %}
+                    <tr><td colspan="2">Nenhum cliente cadastrado.</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</section>
 
-        h1 {
-            text-align: center;
-            margin-top: 30px;
-            color: #1f2937;
-        }
+<section class="panel service-list">
+    <div class="panel-header">Ordens de Serviço</div>
+    <div class="table-wrapper">
+        <table>
+            <thead><tr><th>Cliente</th><th>Status</th><th>Valor</th></tr></thead>
+            <tbody>
+                {% for servico in servicos %}
+                    <tr><td>{{ servico.cliente.nome }}</td><td>{{ servico.get_status_display }}</td><td>R$ {{ servico.valor }}</td></tr>
+                {% empty %}
+                    <tr><td colspan="3">Nenhuma OS cadastrada.</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</section>
 
-        nav {
-            display: flex;
-            justify-content: center;
-            gap: 15px;
-            flex-wrap: wrap;
-            padding: 20px;
-            background: #1e3a8a;
-            margin-bottom: 30px;
-        }
-
-        nav a {
-            text-decoration: none;
-            color: white;
-            font-weight: bold;
-            padding: 10px 16px;
-            border-radius: 8px;
-            background: #2563eb;
-        }
-
-        nav a:hover {
-            background: #1d4ed8;
-        }
-
-        h2 {
-            margin-left: 20px;
-            color: #111827;
-        }
-
-        ul {
-            list-style: none;
-            padding: 0 20px 20px 20px;
-            margin: 0;
-        }
-
-        li {
-            background: white;
-            padding: 12px 16px;
-            margin-bottom: 10px;
-            border-radius: 8px;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-        }
-    </style>
-</head>
-<body>
-    <h1>Sistema de Loja</h1>
-
-    <nav>
-        <a href="{% url 'clientes' %}">Clientes</a>
-        <a href="{% url 'produtos' %}">Produtos</a>
-        <a href="{% url 'servicos' %}">Ordens de Serviço</a>
-        <a href="{% url 'orcamentos' %}">Orçamentos</a>
-    </nav>
-
-    <h2>Produtos em estoque</h2>
-    <ul>
-        {% for produto in produtos %}
-            <li>{{ produto.nome }} - Quantidade: {{ produto.quantidade }} - R$ {{ produto.preco }}</li>
-        {% empty %}
-            <li>Nenhum produto cadastrado.</li>
-        {% endfor %}
-    </ul>
-
-    <h2>Clientes</h2>
-    <ul>
-        {% for cliente in clientes %}
-            <li>{{ cliente.nome }} - {{ cliente.telefone }}</li>
-        {% empty %}
-            <li>Nenhum cliente cadastrado.</li>
-        {% endfor %}
-    </ul>
-
-    <h2>Ordens de Serviço</h2>
-    <ul>
-        {% for servico in servicos %}
-            <li>{{ servico.cliente.nome }} - {{ servico.status }} - R$ {{ servico.valor }}</li>
-        {% empty %}
-            <li>Nenhuma OS cadastrada.</li>
-        {% endfor %}
-    </ul>
-
-    <h2>Orçamentos</h2>
-    <ul>
-        {% for orcamento in orcamentos %}
-            <li>{{ orcamento.cliente.nome }} - {{ orcamento.status }} - Total: R$ {{ orcamento.valor_total }}</li>
-        {% empty %}
-            <li>Nenhum orçamento cadastrado.</li>
-        {% endfor %}
-    </ul>
-</body>
-</html>
+<section class="panel service-list">
+    <div class="panel-header">Orçamentos</div>
+    <div class="table-wrapper">
+        <table>
+            <thead><tr><th>Cliente</th><th>Status</th><th>Total</th></tr></thead>
+            <tbody>
+                {% for orcamento in orcamentos %}
+                    <tr><td>{{ orcamento.cliente.nome }}</td><td>{{ orcamento.get_status_display }}</td><td>R$ {{ orcamento.valor_total }}</td></tr>
+                {% empty %}
+                    <tr><td colspan="3">Nenhum orçamento cadastrado.</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</section>
+{% endblock %}

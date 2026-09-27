@@ -1,0 +1,127 @@
+{% extends 'loja_app/base.html' %}
+
+{% block content %}
+<section class="panel">
+    <div class="panel-header">Relatório de recebimentos</div>
+    <form class="report-filters" method="get">
+        <div>
+            <label for="inicio">Data inicial</label>
+            <input id="inicio" type="date" name="inicio" value="{{ inicio|date:'Y-m-d' }}" required>
+        </div>
+        <div>
+            <label for="fim">Data final</label>
+            <input id="fim" type="date" name="fim" value="{{ fim|date:'Y-m-d' }}" required>
+        </div>
+        <button type="submit">Aplicar período</button>
+    </form>
+    {% if erro %}
+        <p role="alert" class="report-error">{{ erro }}</p>
+    {% endif %}
+</section>
+
+<section class="panel service-list">
+    <div class="panel-header">Valor recebido no período</div>
+    <div class="report-total">R$ {{ total_recebido|floatformat:2 }}</div>
+</section>
+
+<section class="panel service-list">
+    <div class="panel-header">Recebimentos por {{ agrupamento }}</div>
+    <div class="chart-container">
+        <canvas id="recebimentos-chart" aria-label="Gráfico dos recebimentos no período" role="img"></canvas>
+        <p id="chart-warning" hidden>Não foi possível carregar o gráfico. Verifique sua conexão com a internet.</p>
+    </div>
+</section>
+
+<section class="panel service-list">
+    <div class="panel-header">Orçamentos finalizados no período</div>
+    <div class="table-wrapper">
+        <table>
+            <thead>
+                <tr><th>Código</th><th>Cliente</th><th>Finalizado em</th><th>Valor recebido</th></tr>
+            </thead>
+            <tbody>
+                {% for orcamento in orcamentos %}
+                    <tr>
+                        <td>{{ orcamento.id }}</td>
+                        <td>{{ orcamento.cliente.nome }}</td>
+                        <td>{{ orcamento.data_finalizacao|date:"d/m/Y H:i" }}</td>
+                        <td>R$ {{ orcamento.valor_total|floatformat:2 }}</td>
+                    </tr>
+                {% empty %}
+                    <tr><td colspan="4">Nenhum orçamento finalizado neste período.</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</section>
+
+{{ chart_labels|json_script:"recebimentos-labels" }}
+{{ chart_values|json_script:"recebimentos-values" }}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    const chartCanvas = document.getElementById("recebimentos-chart");
+    if (typeof Chart === "undefined") {
+        document.getElementById("chart-warning").hidden = false;
+    } else {
+        const chartLabels = JSON.parse(document.getElementById("recebimentos-labels").textContent);
+        const chartValues = JSON.parse(document.getElementById("recebimentos-values").textContent);
+        const currency = new Intl.NumberFormat("pt-BR", {
+            style: "currency",
+            currency: "BRL"
+        });
+
+        new Chart(chartCanvas, {
+            type: "bar",
+            data: {
+                labels: chartLabels,
+                datasets: [{
+                    label: "Valor recebido",
+                    data: chartValues,
+                    backgroundColor: "rgba(8, 120, 232, 0.65)",
+                    borderColor: "#0878e8",
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: {
+                            callback: value => currency.format(value)
+                        }
+                    }
+                },
+                plugins: {
+                    tooltip: {
+                        callbacks: {
+                            label: context => currency.format(context.parsed.y)
+                        }
+                    }
+                }
+            }
+        });
+    }
+</script>
+<style>
+    .report-error {
+        margin: 0 16px 16px;
+        color: #a12622;
+    }
+
+    .chart-container {
+        height: 340px;
+    }
+
+    @media (max-width: 640px) {
+        .report-filters {
+            grid-template-columns: 1fr;
+        }
+
+        .report-total {
+            font-size: 24px;
+        }
+    }
+</style>
+{% endblock %}

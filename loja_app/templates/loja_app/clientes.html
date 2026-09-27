@@ -1,67 +1,64 @@
-<style>
-    * {
-        box-sizing: border-box;
-        font-family: Arial, sans-serif;
-    }
+{% extends 'loja_app/base.html' %}
 
-    body {
-        margin: 0;
-        background: #f4f6fb;
-        padding: 30px;
-    }
+{% block content %}
+<section class="panel">
+    <div class="panel-header">
+        {% if cliente %}Editar Cliente{% else %}Cadastrar Cliente{% endif %}
+    </div>
 
-    h2 {
-        color: #1f2937;
-        margin-bottom: 20px;
-    }
+    <form method="post">
+        {% csrf_token %}
 
-    form {
-        max-width: 500px;
-        background: white;
-        padding: 25px;
-        border-radius: 12px;
-        box-shadow: 0 3px 10px rgba(0,0,0,0.08);
-    }
+        <label for="nome">Nome</label>
+        <input id="nome" type="text" name="nome" value="{% if cliente %}{{ cliente.nome }}{% endif %}" required>
+        <label for="telefone">Telefone</label>
+        <input id="telefone" type="text" name="telefone" value="{% if cliente %}{{ cliente.telefone }}{% endif %}" required>
+        <label for="cep">CEP</label>
+        <input id="cep" type="text" name="cep" value="{% if cliente %}{{ cliente.cep }}{% endif %}" required>
+        <label for="rua">Rua</label>
+        <input id="rua" type="text" name="rua" value="{% if cliente %}{{ cliente.rua }}{% endif %}" required>
+        <label for="numero">Número</label>
+        <input id="numero" type="text" name="numero" value="{% if cliente %}{{ cliente.numero }}{% endif %}">
+        <label for="bairro">Bairro</label>
+        <input id="bairro" type="text" name="bairro" value="{% if cliente %}{{ cliente.bairro }}{% endif %}" required>
+        <label for="cidade">Cidade</label>
+        <input id="cidade" type="text" name="cidade" value="{% if cliente %}{{ cliente.cidade }}{% endif %}" required>
+        <label for="estado">Estado</label>
+        <input id="estado" type="text" name="estado" maxlength="2" value="{% if cliente %}{{ cliente.estado }}{% endif %}" required>
 
-    input, select, textarea, button {
-        width: 100%;
-        display: block;
-        margin-bottom: 15px;
-        padding: 12px 14px;
-        border: 1px solid #d1d5db;
-        border-radius: 8px;
-        font-size: 16px;
-    }
+        <div class="form-actions">
+            <button type="submit">{% if cliente %}Salvar atualização{% else %}Salvar{% endif %}</button>
+            {% if cliente %}
+                <a class="cancel-button" href="{% url 'clientes' %}">Cancelar</a>
+            {% else %}
+                <a class="cancel-button" href="{% url 'index' %}">Cancelar</a>
+            {% endif %}
+        </div>
+    </form>
+</section>
 
-    button {
-        background: #2563eb;
-        color: white;
-        border: none;
-        font-weight: bold;
-        cursor: pointer;
-    }
-
-    button:hover {
-        background: #1d4ed8;
-    }
-</style>
-
-<h2>Cadastrar Cliente</h2>
-
-<form method="post">
-    {% csrf_token %}
-
-    <input type="text" name="nome" placeholder="Nome">
-    <input type="text" name="telefone" placeholder="Telefone">
-    <input type="text" id="cep" name="cep" placeholder="CEP">
-    <input type="text" id="rua" name="rua" placeholder="Rua">
-    <input type="text" name="numero" placeholder="Número">
-    <input type="text" id="bairro" name="bairro" placeholder="Bairro">
-    <input type="text" id="cidade" name="cidade" placeholder="Cidade">
-    <input type="text" id="estado" name="estado" placeholder="Estado">
-
-    <button type="submit">Salvar</button>
-</form>
+<section class="panel service-list">
+    <div class="panel-header">Clientes cadastrados</div>
+    <div class="table-wrapper">
+        <table>
+            <thead>
+                <tr><th>Nome</th><th>Telefone</th><th>Cidade</th><th>Ações</th></tr>
+            </thead>
+            <tbody>
+                {% for item in clientes %}
+                    <tr>
+                        <td>{{ item.nome }}</td>
+                        <td>{{ item.telefone }}</td>
+                        <td>{{ item.cidade }} - {{ item.estado }}</td>
+                        <td><a href="{% url 'editar_cliente' item.id %}">Editar</a></td>
+                    </tr>
+                {% empty %}
+                    <tr><td colspan="4">Nenhum cliente cadastrado.</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</section>
 
 <script>
     document.getElementById('cep').addEventListener('blur', function () {
@@ -89,3 +86,4 @@
             });
     });
 </script>
+{% endblock %}

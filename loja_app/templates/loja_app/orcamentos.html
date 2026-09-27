@@ -1,56 +1,45 @@
-<style>
-    * {
-        box-sizing: border-box;
-        font-family: Arial, sans-serif;
-    }
+{% extends 'loja_app/base.html' %}
 
-    body {
-        margin: 0;
-        background: #f4f6fb;
-        padding: 30px;
-    }
-
-    h2 {
-        color: #1f2937;
-    }
-
-    a {
-        display: inline-block;
-        margin-bottom: 20px;
-        text-decoration: none;
-        background: #2563eb;
-        color: white;
-        padding: 10px 16px;
-        border-radius: 8px;
-        font-weight: bold;
-    }
-
-    ul {
-        list-style: none;
-        padding: 0;
-    }
-
-    li {
-        background: white;
-        padding: 12px 16px;
-        border-radius: 8px;
-        margin-bottom: 10px;
-        box-shadow: 0 1px 3px rgba(0,0,0,0.08);
-    }
-</style>
-
-<h2>Orçamentos</h2>
-
-<a href="{% url 'novo_orcamento' %}">Novo orçamento</a>
-
-<ul>
-    {% for orcamento in orcamentos %}
-        <li>
-            Cliente: {{ orcamento.cliente.nome }} |
-            Status: {{ orcamento.status }} |
-            Total: R$ {{ orcamento.valor_total }}
-        </li>
-    {% empty %}
-        <li>Nenhum orçamento cadastrado.</li>
-    {% endfor %}
-</ul>
+{% block content %}
+<section class="panel">
+    <div class="panel-header">Orçamentos</div>
+    <div class="table-wrapper">
+        <table>
+            <thead>
+                <tr><th>Código</th><th>Cliente</th><th>Data</th><th>Status</th><th>Total</th><th>Ação</th></tr>
+            </thead>
+            <tbody>
+                {% for orcamento in orcamentos %}
+                    <tr>
+                        <td>{{ orcamento.id }}</td>
+                        <td>{{ orcamento.cliente.nome }}</td>
+                        <td>{{ orcamento.data_criacao|date:"d/m/Y" }}</td>
+                        <td>{{ orcamento.get_status_display }}</td>
+                        <td>R$ {{ orcamento.valor_total }}</td>
+                        <td>
+                            {% if orcamento.status != "Finalizado" %}
+                                <a href="{% url 'editar_orcamento' orcamento.id %}">Alterar</a>
+                            {% endif %}
+                            {% if orcamento.status == "Finalizado" %}
+                                {{ orcamento.data_finalizacao|date:"d/m/Y" }}
+                            {% elif orcamento.status != "Rejeitado" %}
+                                <form class="inline-form" method="post" action="{% url 'finalizar_orcamento' orcamento.id %}">
+                                    {% csrf_token %}
+                                    <button class="small-action" type="submit">Finalizar</button>
+                                </form>
+                            {% else %}
+                                —
+                            {% endif %}
+                        </td>
+                    </tr>
+                {% empty %}
+                    <tr><td colspan="6">Nenhum orçamento cadastrado.</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    <div class="panel-footer">
+        <a class="action-button" href="{% url 'novo_orcamento' %}">Novo orçamento</a>
+    </div>
+</section>
+{% endblock %}

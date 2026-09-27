@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Entrar | Sistema de Loja</title>
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            min-height: 100vh;
+            margin: 0;
+            display: grid;
+            place-items: center;
+            padding: 24px;
+            background: #f4f5f6;
+            color: #333;
+            font-family: Arial, sans-serif;
+        }
+
+        .login-panel {
+            width: min(100%, 420px);
+            border: 1px solid #ddd;
+            background: white;
+        }
+
+        .login-header {
+            padding: 18px 20px;
+            border-bottom: 1px solid #ddd;
+            background: #0878e8;
+            color: white;
+            font-size: 18px;
+            font-weight: bold;
+        }
+
+        form {
+            padding: 20px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 6px;
+            font-size: 14px;
+        }
+
+        input {
+            width: 100%;
+            margin-bottom: 16px;
+            padding: 10px;
+            border: 1px solid #ccc;
+            font: inherit;
+        }
+
+        button {
+            width: 100%;
+            padding: 11px;
+            border: 1px solid #0568c9;
+            background: #0878e8;
+            color: white;
+            font: inherit;
+            cursor: pointer;
+        }
+
+        .login-error {
+            margin: 0 20px 16px;
+            color: #a12622;
+        }
+    </style>
+</head>
+<body>
+    <main class="login-panel">
+        <div class="login-header">Sistema de Loja</div>
+        {% if form.errors %}
+            <p class="login-error" role="alert">Usuário ou senha inválidos.</p>
+        {% endif %}
+        <form method="post">
+            {% csrf_token %}
+            <label for="id_username">Usuário</label>
+            <input id="id_username" name="username" type="text" autocomplete="username" required autofocus>
+
+            <label for="id_password">Senha</label>
+            <input id="id_password" name="password" type="password" autocomplete="current-password" required>
+
+            <input type="hidden" name="next" value="{{ next }}">
+            <button type="submit">Entrar</button>
+        </form>
+    </main>
+</body>
+</html>
