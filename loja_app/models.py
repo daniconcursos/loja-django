@@ -51,9 +51,11 @@ class Orcamento(models.Model):
             ("Enviado", "Enviado"),
             ("Aprovado", "Aprovado"),
             ("Rejeitado", "Rejeitado"),
+            ("Finalizado", "Finalizado"),
         ],
         default="Rascunho"
     )
+    data_finalizacao = models.DateTimeField(blank=True, null=True)
 
     def __str__(self):
         return f"Orçamento {self.id} - {self.cliente.nome}"

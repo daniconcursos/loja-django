@@ -1,86 +1,339 @@
+{% extends 'loja_app/base.html' %}
+
+{% block content %}
 <style>
-    * {
-        box-sizing: border-box;
-        font-family: Arial, sans-serif;
+    /* Estilos para a lista de itens do orçamento */
+    .budget-items-box {
+        background-color: #24272c;
+        border: 1px solid #363a40;
+        border-radius: 6px;
+        padding: 16px;
+        margin-top: 10px;
+        margin-bottom: 20px;
     }
 
-    body {
-        margin: 0;
-        background: #f4f6fb;
-        padding: 30px;
+    .budget-item {
+        display: grid;
+        grid-template-columns: 2fr 110px 140px 140px auto;
+        align-items: end;
+        gap: 12px;
+        margin-bottom: 12px;
+        padding-bottom: 12px;
+        border-bottom: 1px solid #32363c;
     }
 
-    h2 {
-        color: #1f2937;
+    .budget-item:last-child {
+        margin-bottom: 0;
+        padding-bottom: 0;
+        border-bottom: none;
     }
 
-    form {
-        max-width: 500px;
-        background: white;
-        padding: 25px;
-        border-radius: 12px;
-        box-shadow: 0 3px 10px rgba(0,0,0,0.08);
+    @media (max-width: 850px) {
+        .budget-item {
+            grid-template-columns: 1fr 1fr;
+        }
     }
 
-    label {
-        display: block;
-        margin-bottom: 8px;
-        font-weight: bold;
-        color: #374151;
+    .item-subtotal {
+        background-color: #1a1c20;
+        border: 1px solid #3a3a3a;
+        color: #00bc8c;
+        font-weight: 600;
+        padding: 9px 12px;
+        border-radius: 4px;
+        font-size: 0.9rem;
+        height: 38px;
+        display: flex;
+        align-items: center;
     }
 
-    input, select, button {
-        width: 100%;
-        display: block;
-        margin-bottom: 15px;
-        padding: 12px 14px;
-        border: 1px solid #d1d5db;
-        border-radius: 8px;
-        font-size: 16px;
-    }
-
-    button {
-        background: #2563eb;
-        color: white;
-        border: none;
-        font-weight: bold;
+    .btn-remove-item {
+        background-color: transparent;
+        color: #e74c3c;
+        border: 1px solid #522727;
+        padding: 8px 12px;
+        border-radius: 4px;
         cursor: pointer;
+        font-size: 0.85rem;
+        transition: background-color 0.2s, color 0.2s;
+        height: 38px;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
     }
 
-    button:hover {
-        background: #1d4ed8;
+    .btn-remove-item:hover:not(:disabled) {
+        background-color: #e74c3c;
+        color: #ffffff;
+    }
+
+    .btn-remove-item:disabled {
+        opacity: 0.4;
+        cursor: not-allowed;
+    }
+
+    .btn-add-item {
+        background-color: #2b3038;
+        color: #38bdf8;
+        border: 1px dashed #48515c;
+        padding: 10px 16px;
+        border-radius: 4px;
+        width: 100%;
+        cursor: pointer;
+        font-weight: 600;
+        font-size: 0.88rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        transition: background-color 0.2s, border-color 0.2s;
+    }
+
+    .btn-add-item:hover:not(:disabled) {
+        background-color: #323842;
+        border-color: #38bdf8;
+    }
+
+    .total-box {
+        background-color: #1e1e1e;
+        border: 1px solid #3a3a3a;
+        border-radius: 6px;
+        padding: 14px 20px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-top: 20px;
+    }
+
+    .total-box .label {
+        font-size: 0.95rem;
+        font-weight: 600;
+        color: #9ca3af;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    .total-box .value {
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: #00bc8c;
+    }
+
+    /* Ajuste para selects no tema escuro */
+    .field-group select {
+        background-color: #1e1e1e;
+        border: 1px solid #444444;
+        color: #ffffff;
+        padding: 9px 12px;
+        border-radius: 4px;
+        font-size: 0.9rem;
+        outline: none;
+        width: 100%;
+        transition: border-color 0.2s;
+    }
+
+    .field-group select:focus {
+        border-color: #00bc8c;
     }
 </style>
 
-<h2>Novo Orçamento</h2>
+<div style="margin-bottom: 22px;">
+    <h2 style="font-weight: 600; color: #fff; font-size: 1.4rem;">
+        {% if orcamento %}Alterar Orçamento #{{ orcamento.id }}{% else %}Novo Orçamento{% endif %}
+    </h2>
+    <span style="color: #888; font-size: 0.85rem;">Composição de produtos, serviços e cálculo automático de valores</span>
+</div>
 
-<form method="post">
-    {% csrf_token %}
+<!-- Card do Formulário -->
+<div class="admin-card">
+    <div class="admin-card-header">
+        <span><i class="fas fa-file-invoice-dollar text-muted me-2"></i> Dados da Proposta</span>
+    </div>
 
-    <label>Cliente</label>
-    <select name="cliente">
-        {% for cliente in clientes %}
-            <option value="{{ cliente.id }}">{{ cliente.nome }}</option>
-        {% endfor %}
-    </select>
+    <div class="admin-card-body">
+        <form method="post" id="formOrcamento">
+            {% csrf_token %}
 
-    <label>Descrição</label>
-    <input type="text" name="descricao">
+            <div class="form-row">
+                <!-- Seleção do Cliente -->
+                <div class="form-col col-6">
+                    <div class="field-group">
+                        <label for="cliente">Cliente *</label>
+                        <select id="cliente" name="cliente" required>
+                            <option value="">Selecione um cliente cadastrado</option>
+                            {% for c in clientes %}
+                                <option value="{{ c.id }}" {% if orcamento and c.id == orcamento.cliente_id %}selected{% endif %}>
+                                    {{ c.nome }} ({{ c.telefone }})
+                                </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
 
-    <h3>Itens</h3>
+                <!-- Descrição / Observação -->
+                <div class="form-col col-6">
+                    <div class="field-group">
+                        <label for="descricao">Descrição / Finalidade</label>
+                        <input id="descricao" type="text" name="descricao" value="{% if orcamento %}{{ orcamento.descricao }}{% endif %}" placeholder="Ex: Instalação de CFTV e alarme residencial">
+                    </div>
+                </div>
+            </div>
 
-    <label>Produto</label>
-    <select name="produto">
-        {% for produto in produtos %}
-            <option value="{{ produto.id }}">{{ produto.nome }}</option>
-        {% endfor %}
-    </select>
+            <!-- Seção de Produtos/Serviços -->
+            <div style="margin-top: 24px;">
+                <label style="font-size: 0.85rem; color: #9ca3af; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">
+                    Itens e Equipamentos
+                </label>
+            </div>
 
-    <label>Quantidade</label>
-    <input type="number" name="quantidade" value="1">
+            <div class="budget-items-box">
+                <div id="itens-orcamento">
+                    {% for linha in linhas %}
+                    <div class="budget-item">
+                        <div class="field-group">
+                            <label>Equipamento / Material</label>
+                            <select name="produto" required>
+                                <option value="" {% if not linha.produto_id %}selected{% endif %}>Selecione um item</option>
+                                {% for p in produtos %}
+                                    <option value="{{ p.id }}" data-preco="{{ p.preco }}" {% if p.id == linha.produto_id %}selected{% endif %}>
+                                        {{ p.nome }}
+                                    </option>
+                                {% endfor %}
+                            </select>
+                        </div>
 
-    <label>Preço unitário</label>
-    <input type="number" step="0.01" name="preco" placeholder="Preço unitário">
+                        <div class="field-group">
+                            <label>Quantidade</label>
+                            <input type="number" name="quantidade" class="input-qty" value="{{ linha.quantidade }}" min="1" required>
+                        </div>
 
-    <button type="submit">Salvar orçamento</button>
-</form>
+                        <div class="field-group">
+                            <label>Preço Unitário</label>
+                            <input type="number" step="0.01" name="preco" class="input-price" min="0" placeholder="0,00" value="{{ linha.preco }}" required>
+                        </div>
+
+                        <div class="field-group">
+                            <label>Subtotal</label>
+                            <div class="item-subtotal">R$ 0,00</div>
+                        </div>
+
+                        <div>
+                            <button class="btn-remove-item remove-item" type="button" title="Remover item">
+                                <i class="fas fa-trash-alt"></i> Excluir
+                            </button>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+
+                <div style="margin-top: 14px;">
+                    <button id="adicionar-produto" class="btn-add-item" type="button" {% if not produtos %}disabled{% endif %}>
+                        <i class="fas fa-plus-circle"></i> Adicionar Outro Produto
+                    </button>
+                </div>
+            </div>
+
+            <!-- Resumo e Totalizador Dinâmico -->
+            <div class="total-box">
+                <span class="label"><i class="fas fa-calculator me-2"></i> Valor Total Previsto</span>
+                <span class="value" id="orcamento-total-display">R$ 0,00</span>
+            </div>
+
+            <div style="display: flex; gap: 10px; margin-top: 24px;">
+                <button type="submit" class="btn-green">
+                    <i class="fas fa-check"></i> {% if orcamento %}Salvar Alterações{% else %}Salvar Orçamento{% endif %}
+                </button>
+                <a class="btn-gray" href="{% url 'orcamentos' %}">Cancelar</a>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        const itensOrcamento = document.getElementById("itens-orcamento");
+        const botaoAdicionar = document.getElementById("adicionar-produto");
+        const totalDisplay = document.getElementById("orcamento-total-display");
+
+        function recalcularLinha(linha) {
+            const qtyInput = linha.querySelector('input[name="quantidade"]');
+            const precoInput = linha.querySelector('input[name="preco"]');
+            const subtotalDiv = linha.querySelector('.item-subtotal');
+
+            const qty = parseFloat(qtyInput.value) || 0;
+            const preco = parseFloat(precoInput.value) || 0;
+            const subtotal = qty * preco;
+
+            if (subtotalDiv) {
+                subtotalDiv.textContent = `R$ ${subtotal.toFixed(2).replace('.', ',')}`;
+            }
+
+            return subtotal;
+        }
+
+        function recalcularTotalGeral() {
+            let total = 0;
+            const linhas = itensOrcamento.querySelectorAll(".budget-item");
+            linhas.forEach(linha => {
+                total += recalcularLinha(linha);
+            });
+
+            if (totalDisplay) {
+                totalDisplay.textContent = `R$ ${total.toFixed(2).replace('.', ',')}`;
+            }
+        }
+
+        function atualizarBotoesRemover() {
+            const linhas = itensOrcamento.querySelectorAll(".budget-item");
+            linhas.forEach((linha) => {
+                const btn = linha.querySelector(".remove-item");
+                if (btn) {
+                    btn.disabled = (linhas.length === 1);
+                }
+            });
+            recalcularTotalGeral();
+        }
+
+        itensOrcamento.addEventListener("change", (event) => {
+            if (event.target.matches('select[name="produto"]')) {
+                const preco = event.target.selectedOptions[0].dataset.preco || "";
+                const linha = event.target.closest(".budget-item");
+                const precoInput = linha.querySelector('input[name="preco"]');
+                if (precoInput) {
+                    precoInput.value = preco;
+                }
+                recalcularTotalGeral();
+            }
+        });
+
+        itensOrcamento.addEventListener("input", (event) => {
+            if (event.target.matches('input[name="quantidade"]') || event.target.matches('input[name="preco"]')) {
+                recalcularTotalGeral();
+            }
+        });
+
+        itensOrcamento.addEventListener("click", (event) => {
+            const btn = event.target.closest(".remove-item");
+            if (btn && !btn.disabled) {
+                btn.closest(".budget-item").remove();
+                atualizarBotoesRemover();
+            }
+        });
+
+        if (botaoAdicionar) {
+            botaoAdicionar.addEventListener("click", () => {
+                const primeiraLinha = itensOrcamento.querySelector(".budget-item");
+                const novaLinha = primeiraLinha.cloneNode(true);
+                novaLinha.querySelector('select[name="produto"]').selectedIndex = 0;
+                novaLinha.querySelector('input[name="quantidade"]').value = "1";
+                novaLinha.querySelector('input[name="preco"]').value = "";
+                novaLinha.querySelector('.item-subtotal').textContent = "R$ 0,00";
+                itensOrcamento.appendChild(novaLinha);
+                atualizarBotoesRemover();
+            });
+        }
+
+        atualizarBotoesRemover();
+    });
+</script>
+{% endblock %}
