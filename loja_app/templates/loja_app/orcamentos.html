@@ -1,45 +1,132 @@
 {% extends 'loja_app/base.html' %}
 
 {% block content %}
-<section class="panel">
-    <div class="panel-header">Orçamentos</div>
-    <div class="table-wrapper">
-        <table>
+<style>
+    /* Estilos para badges de status de orçamento */
+    .badge-status-orc {
+        padding: 4px 10px;
+        border-radius: 4px;
+        font-size: 0.78rem;
+        font-weight: 600;
+        display: inline-block;
+    }
+
+    .status-rascunho   { background-color: #383d44; color: #adb5bd; border: 1px solid #4f5660; }
+    .status-aprovado   { background-color: rgba(0, 188, 140, 0.15); color: #00bc8c; border: 1px solid rgba(0, 188, 140, 0.3); }
+    .status-finalizado { background-color: rgba(55, 90, 127, 0.25); color: #38bdf8; border: 1px solid rgba(55, 90, 127, 0.4); }
+    .status-rejeitado  { background-color: rgba(231, 76, 60, 0.15); color: #e74c3c; border: 1px solid rgba(231, 76, 60, 0.3); }
+
+    .btn-action-small {
+        background-color: #375a7f;
+        color: #ffffff;
+        border: none;
+        padding: 5px 12px;
+        border-radius: 4px;
+        font-size: 0.8rem;
+        font-weight: 600;
+        cursor: pointer;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        transition: background-color 0.2s;
+    }
+
+    .btn-action-small:hover {
+        background-color: #2b4764;
+        color: #ffffff;
+    }
+
+    .btn-finalize {
+        background-color: #00bc8c;
+    }
+
+    .btn-finalize:hover {
+        background-color: #009670;
+    }
+</style>
+
+<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 22px;">
+    <div>
+        <h2 style="font-weight: 600; color: #fff; font-size: 1.4rem;">Orçamentos</h2>
+        <span style="color: #888; font-size: 0.85rem;">Gestão comercial e propostas para clientes</span>
+    </div>
+    <a href="{% url 'novo_orcamento' %}" class="btn-green">
+        <i class="fas fa-plus"></i> Novo Orçamento
+    </a>
+</div>
+
+<!-- Card Principal de Orçamentos -->
+<div class="admin-card">
+    <div class="admin-card-header">
+        <span><i class="fas fa-file-invoice-dollar text-muted me-2"></i> Listagem de Propostas</span>
+        <span style="font-size: 0.8rem; color: #888;">{{ orcamentos|length }} registro(s)</span>
+    </div>
+
+    <div style="overflow-x: auto;">
+        <table class="admin-table">
             <thead>
-                <tr><th>Código</th><th>Cliente</th><th>Data</th><th>Status</th><th>Total</th><th>Ação</th></tr>
+                <tr>
+                    <th style="width: 80px;">Código</th>
+                    <th>Cliente</th>
+                    <th>Data Criação</th>
+                    <th>Status</th>
+                    <th>Valor Total</th>
+                    <th style="text-align: right;">Ações</th>
+                </tr>
             </thead>
             <tbody>
                 {% for orcamento in orcamentos %}
                     <tr>
-                        <td>{{ orcamento.id }}</td>
-                        <td>{{ orcamento.cliente.nome }}</td>
+                        <td style="color: #888; font-weight: 600;">#{{ orcamento.id }}</td>
+                        <td style="color: #fff; font-weight: 500;">{{ orcamento.cliente.nome }}</td>
                         <td>{{ orcamento.data_criacao|date:"d/m/Y" }}</td>
-                        <td>{{ orcamento.get_status_display }}</td>
-                        <td>R$ {{ orcamento.valor_total }}</td>
                         <td>
-                            {% if orcamento.status != "Finalizado" %}
-                                <a href="{% url 'editar_orcamento' orcamento.id %}">Alterar</a>
-                            {% endif %}
                             {% if orcamento.status == "Finalizado" %}
-                                {{ orcamento.data_finalizacao|date:"d/m/Y" }}
-                            {% elif orcamento.status != "Rejeitado" %}
-                                <form class="inline-form" method="post" action="{% url 'finalizar_orcamento' orcamento.id %}">
-                                    {% csrf_token %}
-                                    <button class="small-action" type="submit">Finalizar</button>
-                                </form>
+                                <span class="badge-status-orc status-finalizado">Finalizado</span>
+                            {% elif orcamento.status == "Aprovado" %}
+                                <span class="badge-status-orc status-aprovado">Aprovado</span>
+                            {% elif orcamento.status == "Rejeitado" %}
+                                <span class="badge-status-orc status-rejeitado">Rejeitado</span>
                             {% else %}
-                                —
+                                <span class="badge-status-orc status-rascunho">{{ orcamento.get_status_display }}</span>
                             {% endif %}
+                        </td>
+                        <td style="color: #00bc8c; font-weight: 600;">R$ {{ orcamento.valor_total }}</td>
+                        <td style="text-align: right;">
+                            <div style="display: inline-flex; gap: 8px; align-items: center;">
+                                {% if orcamento.status != "Finalizado" %}
+                                    <a class="btn-action-small" href="{% url 'editar_orcamento' orcamento.id %}">
+                                        <i class="fas fa-edit"></i> Alterar
+                                    </a>
+                                {% endif %}
+
+                                {% if orcamento.status == "Finalizado" %}
+                                    <span style="color: #888; font-size: 0.8rem;">
+                                        <i class="fas fa-calendar-check me-1"></i> {{ orcamento.data_finalizacao|date:"d/m/Y" }}
+                                    </span>
+                                {% elif orcamento.status != "Rejeitado" %}
+                                    <form method="post" action="{% url 'finalizar_orcamento' orcamento.id %}" style="margin: 0; display: inline;">
+                                        {% csrf_token %}
+                                        <button class="btn-action-small btn-finalize" type="submit">
+                                            <i class="fas fa-check"></i> Finalizar
+                                        </button>
+                                    </form>
+                                {% else %}
+                                    <span style="color: #555;">—</span>
+                                {% endif %}
+                            </div>
                         </td>
                     </tr>
                 {% empty %}
-                    <tr><td colspan="6">Nenhum orçamento cadastrado.</td></tr>
+                    <tr>
+                        <td colspan="6" style="text-align: center; color: #777; padding: 24px;">
+                            Nenhum orçamento cadastrado até ao momento.
+                        </td>
+                    </tr>
                 {% endfor %}
             </tbody>
         </table>
     </div>
-    <div class="panel-footer">
-        <a class="action-button" href="{% url 'novo_orcamento' %}">Novo orçamento</a>
-    </div>
-</section>
+</div>
 {% endblock %}

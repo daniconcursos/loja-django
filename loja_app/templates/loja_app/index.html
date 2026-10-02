@@ -1,67 +1,258 @@
 {% extends 'loja_app/base.html' %}
 
 {% block content %}
-<section class="panel service-list">
-    <div class="panel-header">Produtos em estoque</div>
-    <div class="table-wrapper">
-        <table>
-            <thead><tr><th>Produto</th><th>Quantidade</th><th>Preço</th></tr></thead>
-            <tbody>
-                {% for produto in produtos %}
-                    <tr><td>{{ produto.nome }}</td><td>{{ produto.quantidade }}</td><td>R$ {{ produto.preco }}</td></tr>
-                {% empty %}
-                    <tr><td colspan="3">Nenhum produto cadastrado.</td></tr>
-                {% endfor %}
-            </tbody>
-        </table>
-    </div>
-</section>
+<style>
+    /* Estilos complementares específicos do Dashboard */
+    .metric-grid {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 16px;
+        margin-bottom: 24px;
+    }
 
-<section class="panel service-list">
-    <div class="panel-header">Clientes</div>
-    <div class="table-wrapper">
-        <table>
-            <thead><tr><th>Cliente</th><th>Telefone</th></tr></thead>
-            <tbody>
-                {% for cliente in clientes %}
-                    <tr><td>{{ cliente.nome }}</td><td>{{ cliente.telefone }}</td></tr>
-                {% empty %}
-                    <tr><td colspan="2">Nenhum cliente cadastrado.</td></tr>
-                {% endfor %}
-            </tbody>
-        </table>
-    </div>
-</section>
+    @media (max-width: 900px) {
+        .metric-grid {
+            grid-template-columns: repeat(2, 1fr);
+        }
+    }
 
-<section class="panel service-list">
-    <div class="panel-header">Ordens de Serviço</div>
-    <div class="table-wrapper">
-        <table>
-            <thead><tr><th>Cliente</th><th>Status</th><th>Valor</th></tr></thead>
-            <tbody>
-                {% for servico in servicos %}
-                    <tr><td>{{ servico.cliente.nome }}</td><td>{{ servico.get_status_display }}</td><td>R$ {{ servico.valor }}</td></tr>
-                {% empty %}
-                    <tr><td colspan="3">Nenhuma OS cadastrada.</td></tr>
-                {% endfor %}
-            </tbody>
-        </table>
-    </div>
-</section>
+    @media (max-width: 550px) {
+        .metric-grid {
+            grid-template-columns: 1fr;
+        }
+    }
 
-<section class="panel service-list">
-    <div class="panel-header">Orçamentos</div>
-    <div class="table-wrapper">
-        <table>
-            <thead><tr><th>Cliente</th><th>Status</th><th>Total</th></tr></thead>
-            <tbody>
-                {% for orcamento in orcamentos %}
-                    <tr><td>{{ orcamento.cliente.nome }}</td><td>{{ orcamento.get_status_display }}</td><td>R$ {{ orcamento.valor_total }}</td></tr>
-                {% empty %}
-                    <tr><td colspan="3">Nenhum orçamento cadastrado.</td></tr>
-                {% endfor %}
-            </tbody>
-        </table>
+    .metric-card {
+        background-color: #2b2b2b;
+        border: 1px solid #3a3a3a;
+        border-radius: 6px;
+        padding: 18px 20px;
+        display: flex;
+        align-items: center;
+        gap: 16px;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
+    }
+
+    .metric-icon {
+        width: 44px;
+        height: 44px;
+        border-radius: 6px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.25rem;
+    }
+
+    .icon-green  { background: rgba(0, 188, 140, 0.15); color: #00bc8c; }
+    .icon-blue   { background: rgba(55, 90, 127, 0.25); color: #38bdf8; }
+    .icon-yellow { background: rgba(243, 156, 18, 0.15); color: #f39c12; }
+    .icon-purple { background: rgba(155, 89, 182, 0.15); color: #9b59b6; }
+
+    .metric-info .val {
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: #ffffff;
+        line-height: 1.1;
+    }
+
+    .metric-info .lbl {
+        font-size: 0.78rem;
+        color: #9ca3af;
+        text-transform: uppercase;
+        letter-spacing: 0.4px;
+        margin-top: 4px;
+    }
+
+    .dashboard-layout {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 20px;
+    }
+
+    @media (max-width: 850px) {
+        .dashboard-layout {
+            grid-template-columns: 1fr;
+        }
+    }
+
+    .badge-status {
+        padding: 3px 8px;
+        border-radius: 3px;
+        font-size: 0.78rem;
+        font-weight: 600;
+        background-color: #383d44;
+        color: #d1d5db;
+    }
+
+    .badge-qty {
+        background-color: #1e1e1e;
+        color: #38bdf8;
+        border: 1px solid #3a3a3a;
+        padding: 2px 7px;
+        border-radius: 4px;
+        font-weight: 600;
+        font-size: 0.8rem;
+    }
+</style>
+
+<div style="margin-bottom: 22px;">
+    <h2 style="font-weight: 600; color: #fff; font-size: 1.4rem;">Painel de Controle</h2>
+    <span style="color: #888; font-size: 0.85rem;">Visão geral de estoque, atendimentos, clientes e orçamentos</span>
+</div>
+
+<!-- Indicadores Rápidos -->
+<div class="metric-grid">
+    <div class="metric-card">
+        <div class="metric-icon icon-blue"><i class="fas fa-boxes"></i></div>
+        <div class="metric-info">
+            <div class="val">{{ produtos|length }}</div>
+            <div class="lbl">Itens Estoque</div>
+        </div>
     </div>
-</section>
+
+    <div class="metric-card">
+        <div class="metric-icon icon-green"><i class="fas fa-address-book"></i></div>
+        <div class="metric-info">
+            <div class="val">{{ clientes|length }}</div>
+            <div class="lbl">Clientes</div>
+        </div>
+    </div>
+
+    <div class="metric-card">
+        <div class="metric-icon icon-yellow"><i class="fas fa-tools"></i></div>
+        <div class="metric-info">
+            <div class="val">{{ servicos|length }}</div>
+            <div class="lbl">Ordens Serviço</div>
+        </div>
+    </div>
+
+    <div class="metric-card">
+        <div class="metric-icon icon-purple"><i class="fas fa-file-invoice-dollar"></i></div>
+        <div class="metric-info">
+            <div class="val">{{ orcamentos|length }}</div>
+            <div class="lbl">Orçamentos</div>
+        </div>
+    </div>
+</div>
+
+<!-- Grade de Tabelas Operacionais -->
+<div class="dashboard-layout">
+    <!-- Produtos em Estoque -->
+    <div class="admin-card">
+        <div class="admin-card-header">
+            <span><i class="fas fa-boxes text-muted me-2"></i> Produtos em Estoque</span>
+            <span style="font-size: 0.8rem; color: #888;">{{ produtos|length }} cadastrado(s)</span>
+        </div>
+        <div style="overflow-x: auto;">
+            <table class="admin-table">
+                <thead>
+                    <tr>
+                        <th>Produto</th>
+                        <th>Qtd</th>
+                        <th style="text-align: right;">Preço</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for produto in produtos %}
+                        <tr>
+                            <td style="color: #fff; font-weight: 500;">{{ produto.nome }}</td>
+                            <td><span class="badge-qty">{{ produto.quantidade }}</span></td>
+                            <td style="text-align: right; color: #00bc8c; font-weight: 600;">R$ {{ produto.preco }}</td>
+                        </tr>
+                    {% empty %}
+                        <tr><td colspan="3" style="text-align: center; color: #777; padding: 18px;">Nenhum produto em estoque.</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Clientes -->
+    <div class="admin-card">
+        <div class="admin-card-header">
+            <span><i class="fas fa-users text-muted me-2"></i> Clientes</span>
+            <a href="{% url 'clientes' %}" style="color: #00bc8c; font-size: 0.8rem; text-decoration: none; font-weight: 600;">+ Adicionar</a>
+        </div>
+        <div style="overflow-x: auto;">
+            <table class="admin-table">
+                <thead>
+                    <tr>
+                        <th>Cliente</th>
+                        <th style="text-align: right;">Telefone</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for cliente in clientes %}
+                        <tr>
+                            <td style="color: #fff; font-weight: 500;">{{ cliente.nome }}</td>
+                            <td style="text-align: right;">{{ cliente.telefone }}</td>
+                        </tr>
+                    {% empty %}
+                        <tr><td colspan="2" style="text-align: center; color: #777; padding: 18px;">Nenhum cliente cadastrado.</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Ordens de Serviço -->
+    <div class="admin-card">
+        <div class="admin-card-header">
+            <span><i class="fas fa-tools text-muted me-2"></i> Ordens de Serviço</span>
+            <span style="font-size: 0.8rem; color: #888;">{{ servicos|length }} registro(s)</span>
+        </div>
+        <div style="overflow-x: auto;">
+            <table class="admin-table">
+                <thead>
+                    <tr>
+                        <th>Cliente</th>
+                        <th>Status</th>
+                        <th style="text-align: right;">Valor</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for servico in servicos %}
+                        <tr>
+                            <td style="color: #fff; font-weight: 500;">{{ servico.cliente.nome }}</td>
+                            <td><span class="badge-status">{{ servico.get_status_display }}</span></td>
+                            <td style="text-align: right; color: #00bc8c; font-weight: 600;">R$ {{ servico.valor }}</td>
+                        </tr>
+                    {% empty %}
+                        <tr><td colspan="3" style="text-align: center; color: #777; padding: 18px;">Nenhuma OS cadastrada.</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Orçamentos -->
+    <div class="admin-card">
+        <div class="admin-card-header">
+            <span><i class="fas fa-file-invoice-dollar text-muted me-2"></i> Orçamentos</span>
+            <span style="font-size: 0.8rem; color: #888;">{{ orcamentos|length }} registro(s)</span>
+        </div>
+        <div style="overflow-x: auto;">
+            <table class="admin-table">
+                <thead>
+                    <tr>
+                        <th>Cliente</th>
+                        <th>Status</th>
+                        <th style="text-align: right;">Total</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for orcamento in orcamentos %}
+                        <tr>
+                            <td style="color: #fff; font-weight: 500;">{{ orcamento.cliente.nome }}</td>
+                            <td><span class="badge-status">{{ orcamento.get_status_display }}</span></td>
+                            <td style="text-align: right; color: #00bc8c; font-weight: 600;">R$ {{ orcamento.valor_total }}</td>
+                        </tr>
+                    {% empty %}
+                        <tr><td colspan="3" style="text-align: center; color: #777; padding: 18px;">Nenhum orçamento cadastrado.</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
 {% endblock %}

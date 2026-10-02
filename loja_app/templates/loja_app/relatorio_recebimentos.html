@@ -1,68 +1,217 @@
 {% extends 'loja_app/base.html' %}
 
 {% block content %}
-<section class="panel">
-    <div class="panel-header">Relatório de recebimentos</div>
-    <form class="report-filters" method="get">
-        <div>
-            <label for="inicio">Data inicial</label>
-            <input id="inicio" type="date" name="inicio" value="{{ inicio|date:'Y-m-d' }}" required>
-        </div>
-        <div>
-            <label for="fim">Data final</label>
-            <input id="fim" type="date" name="fim" value="{{ fim|date:'Y-m-d' }}" required>
-        </div>
-        <button type="submit">Aplicar período</button>
-    </form>
-    {% if erro %}
-        <p role="alert" class="report-error">{{ erro }}</p>
-    {% endif %}
-</section>
+<style>
+    /* Estilos específicos do Relatório Financeiro */
+    .filter-card-body {
+        padding: 16px 20px;
+    }
 
-<section class="panel service-list">
-    <div class="panel-header">Valor recebido no período</div>
-    <div class="report-total">R$ {{ total_recebido|floatformat:2 }}</div>
-</section>
+    .report-filter-form {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: flex-end;
+        gap: 16px;
+    }
 
-<section class="panel service-list">
-    <div class="panel-header">Recebimentos por {{ agrupamento }}</div>
-    <div class="chart-container">
-        <canvas id="recebimentos-chart" aria-label="Gráfico dos recebimentos no período" role="img"></canvas>
-        <p id="chart-warning" hidden>Não foi possível carregar o gráfico. Verifique sua conexão com a internet.</p>
+    .filter-item {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+        flex: 1;
+        min-width: 180px;
+    }
+
+    .filter-item label {
+        font-size: 0.8rem;
+        color: #9ca3af;
+        font-weight: 500;
+        text-transform: uppercase;
+        letter-spacing: 0.4px;
+    }
+
+    .filter-item input {
+        background-color: #1e1e1e;
+        border: 1px solid #444444;
+        color: #ffffff;
+        padding: 9px 12px;
+        border-radius: 4px;
+        font-size: 0.9rem;
+        outline: none;
+        width: 100%;
+        color-scheme: dark;
+    }
+
+    .filter-item input:focus {
+        border-color: #00bc8c;
+    }
+
+    .revenue-banner {
+        background: linear-gradient(135deg, #1c2724 0%, #2b2b2b 100%);
+        border: 1px solid #2e4a40;
+        border-radius: 6px;
+        padding: 22px 28px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 24px;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
+    }
+
+    .revenue-info .label {
+        font-size: 0.85rem;
+        color: #a7f3d0;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        font-weight: 600;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .revenue-info .val {
+        font-size: 2.2rem;
+        font-weight: 700;
+        color: #00bc8c;
+        margin-top: 6px;
+        line-height: 1;
+    }
+
+    .chart-box {
+        position: relative;
+        height: 320px;
+        width: 100%;
+    }
+
+    .report-error {
+        margin-top: 14px;
+        padding: 10px 14px;
+        background-color: rgba(231, 76, 60, 0.15);
+        border: 1px solid rgba(231, 76, 60, 0.3);
+        color: #e74c3c;
+        border-radius: 4px;
+        font-size: 0.85rem;
+    }
+</style>
+
+<div style="margin-bottom: 22px;">
+    <h2 style="font-weight: 600; color: #fff; font-size: 1.4rem;">Relatório de Recebimentos</h2>
+    <span style="color: #888; font-size: 0.85rem;">Consolidação financeira, faturamento por período e gráficos analíticos</span>
+</div>
+
+<!-- Filtros de Período -->
+<div class="admin-card">
+    <div class="admin-card-header">
+        <span><i class="fas fa-filter text-muted me-2"></i> Filtro por Período</span>
     </div>
-</section>
 
-<section class="panel service-list">
-    <div class="panel-header">Orçamentos finalizados no período</div>
-    <div class="table-wrapper">
-        <table>
+    <div class="filter-card-body">
+        <form class="report-filter-form" method="get">
+            <div class="filter-item">
+                <label for="inicio">Data Inicial</label>
+                <input id="inicio" type="date" name="inicio" value="{{ inicio|date:'Y-m-d' }}" required>
+            </div>
+
+            <div class="filter-item">
+                <label for="fim">Data Final</label>
+                <input id="fim" type="date" name="fim" value="{{ fim|date:'Y-m-d' }}" required>
+            </div>
+
+            <div>
+                <button type="submit" class="btn-green" style="height: 39px;">
+                    <i class="fas fa-search"></i> Aplicar Período
+                </button>
+            </div>
+        </form>
+
+        {% if erro %}
+            <div role="alert" class="report-error">
+                <i class="fas fa-exclamation-triangle me-1"></i> {{ erro }}
+            </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Destaque do Total Recebido -->
+<div class="revenue-banner">
+    <div class="revenue-info">
+        <div class="label">
+            <i class="fas fa-wallet"></i> Total Faturado no Período
+        </div>
+        <div class="val">R$ {{ total_recebido|floatformat:2 }}</div>
+    </div>
+    <div style="font-size: 2.5rem; color: rgba(0, 188, 140, 0.3);">
+        <i class="fas fa-chart-line"></i>
+    </div>
+</div>
+
+<!-- Gráfico Financeiro -->
+<div class="admin-card">
+    <div class="admin-card-header">
+        <span><i class="fas fa-chart-bar text-muted me-2"></i> Recebimentos por {{ agrupamento|title }}</span>
+    </div>
+    <div class="admin-card-body">
+        <div class="chart-box">
+            <canvas id="recebimentos-chart" aria-label="Gráfico de recebimentos" role="img"></canvas>
+            <p id="chart-warning" style="display: none; color: #e74c3c; text-align: center; padding-top: 40px;">
+                Não foi possível carregar o gráfico. Verifique sua conexão com a internet.
+            </p>
+        </div>
+    </div>
+</div>
+
+<!-- Tabela de Orçamentos Finalizados no Período -->
+<div class="admin-card">
+    <div class="admin-card-header">
+        <span><i class="fas fa-file-invoice-dollar text-muted me-2"></i> Orçamentos Finalizados</span>
+        <span style="font-size: 0.8rem; color: #888;">{{ orcamentos|length }} finalizado(s)</span>
+    </div>
+
+    <div style="overflow-x: auto;">
+        <table class="admin-table">
             <thead>
-                <tr><th>Código</th><th>Cliente</th><th>Finalizado em</th><th>Valor recebido</th></tr>
+                <tr>
+                    <th style="width: 80px;">Código</th>
+                    <th>Cliente</th>
+                    <th>Finalizado em</th>
+                    <th style="text-align: right;">Valor Recebido</th>
+                </tr>
             </thead>
             <tbody>
                 {% for orcamento in orcamentos %}
                     <tr>
-                        <td>{{ orcamento.id }}</td>
-                        <td>{{ orcamento.cliente.nome }}</td>
+                        <td style="color: #888; font-weight: 600;">#{{ orcamento.id }}</td>
+                        <td style="color: #fff; font-weight: 500;">{{ orcamento.cliente.nome }}</td>
                         <td>{{ orcamento.data_finalizacao|date:"d/m/Y H:i" }}</td>
-                        <td>R$ {{ orcamento.valor_total|floatformat:2 }}</td>
+                        <td style="text-align: right; color: #00bc8c; font-weight: 600;">
+                            R$ {{ orcamento.valor_total|floatformat:2 }}
+                        </td>
                     </tr>
                 {% empty %}
-                    <tr><td colspan="4">Nenhum orçamento finalizado neste período.</td></tr>
+                    <tr>
+                        <td colspan="4" style="text-align: center; color: #777; padding: 24px;">
+                            Nenhum orçamento finalizado neste período.
+                        </td>
+                    </tr>
                 {% endfor %}
             </tbody>
         </table>
     </div>
-</section>
+</div>
 
 {{ chart_labels|json_script:"recebimentos-labels" }}
 {{ chart_values|json_script:"recebimentos-values" }}
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
-    const chartCanvas = document.getElementById("recebimentos-chart");
-    if (typeof Chart === "undefined") {
-        document.getElementById("chart-warning").hidden = false;
-    } else {
+    document.addEventListener("DOMContentLoaded", function () {
+        const chartCanvas = document.getElementById("recebimentos-chart");
+        
+        if (typeof Chart === "undefined") {
+            const warning = document.getElementById("chart-warning");
+            if (warning) warning.style.display = "block";
+            return;
+        }
+
         const chartLabels = JSON.parse(document.getElementById("recebimentos-labels").textContent);
         const chartValues = JSON.parse(document.getElementById("recebimentos-values").textContent);
         const currency = new Intl.NumberFormat("pt-BR", {
@@ -75,53 +224,48 @@
             data: {
                 labels: chartLabels,
                 datasets: [{
-                    label: "Valor recebido",
+                    label: "Valor Recebido",
                     data: chartValues,
-                    backgroundColor: "rgba(8, 120, 232, 0.65)",
-                    borderColor: "#0878e8",
-                    borderWidth: 1
+                    backgroundColor: "rgba(0, 188, 140, 0.45)",
+                    borderColor: "#00bc8c",
+                    borderWidth: 2,
+                    borderRadius: 4
                 }]
             },
             options: {
                 responsive: true,
                 maintainAspectRatio: false,
                 scales: {
+                    x: {
+                        grid: { color: "#363a40" },
+                        ticks: { color: "#9ca3af" }
+                    },
                     y: {
                         beginAtZero: true,
+                        grid: { color: "#363a40" },
                         ticks: {
+                            color: "#9ca3af",
                             callback: value => currency.format(value)
                         }
                     }
                 },
                 plugins: {
+                    legend: {
+                        labels: { color: "#ffffff" }
+                    },
                     tooltip: {
+                        backgroundColor: "#1e1e1e",
+                        titleColor: "#ffffff",
+                        bodyColor: "#00bc8c",
+                        borderColor: "#3a3a3a",
+                        borderWidth: 1,
                         callbacks: {
-                            label: context => currency.format(context.parsed.y)
+                            label: context => ` Total: ${currency.format(context.parsed.y)}`
                         }
                     }
                 }
             }
         });
-    }
+    });
 </script>
-<style>
-    .report-error {
-        margin: 0 16px 16px;
-        color: #a12622;
-    }
-
-    .chart-container {
-        height: 340px;
-    }
-
-    @media (max-width: 640px) {
-        .report-filters {
-            grid-template-columns: 1fr;
-        }
-
-        .report-total {
-            font-size: 24px;
-        }
-    }
-</style>
 {% endblock %}

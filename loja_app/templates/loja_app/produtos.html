@@ -1,51 +1,125 @@
 {% extends 'loja_app/base.html' %}
 
 {% block content %}
-<section class="panel">
-    <div class="panel-header">
-        {% if produto %}Editar Produto{% else %}Cadastrar Produto{% endif %}
+<style>
+    /* Estilos complementares para produtos */
+    .badge-stock {
+        background-color: #1e1e1e;
+        color: #38bdf8;
+        border: 1px solid #3a3a3a;
+        padding: 4px 10px;
+        border-radius: 4px;
+        font-weight: 600;
+        font-size: 0.82rem;
+        display: inline-block;
+    }
+
+    .badge-stock-low {
+        background-color: rgba(231, 76, 60, 0.15);
+        color: #e74c3c;
+        border: 1px solid rgba(231, 76, 60, 0.3);
+    }
+</style>
+
+<div style="margin-bottom: 22px;">
+    <h2 style="font-weight: 600; color: #fff; font-size: 1.4rem;">Controle de Estoque</h2>
+    <span style="color: #888; font-size: 0.85rem;">Gerenciamento de materiais, equipamentos e preços de venda</span>
+</div>
+
+<!-- Card do Formulário de Produto -->
+<div class="admin-card">
+    <div class="admin-card-header">
+        <span>
+            <i class="fas {% if produto %}fa-edit{% else %}fa-box-open{% endif %} text-muted me-2"></i>
+            {% if produto %}Editar Produto #{{ produto.id }}{% else %}Novo Produto{% endif %}
+        </span>
     </div>
 
-    <form method="post">
-        {% csrf_token %}
-        <label for="nome">Nome do produto</label>
-        <input id="nome" type="text" name="nome" value="{% if produto %}{{ produto.nome }}{% endif %}" required>
-        <label for="quantidade">Quantidade</label>
-        <input id="quantidade" type="number" name="quantidade" min="0" value="{% if produto %}{{ produto.quantidade }}{% endif %}" required>
-        <label for="preco">Preço</label>
-        <input id="preco" type="number" step="0.01" name="preco" min="0" value="{% if produto %}{{ produto.preco }}{% endif %}" required>
+    <div class="admin-card-body">
+        <form method="post" id="formProduto">
+            {% csrf_token %}
 
-        <div class="form-actions">
-            <button type="submit">{% if produto %}Salvar atualização{% else %}Salvar{% endif %}</button>
-            {% if produto %}
-                <a class="cancel-button" href="{% url 'produtos' %}">Cancelar</a>
-            {% else %}
-                <a class="cancel-button" href="{% url 'index' %}">Cancelar</a>
-            {% endif %}
-        </div>
-    </form>
-</section>
+            <div class="form-row">
+                <div class="form-col col-6">
+                    <div class="field-group">
+                        <label for="nome">Nome do Material / Equipamento *</label>
+                        <input id="nome" type="text" name="nome" value="{% if produto %}{{ produto.nome }}{% endif %}" placeholder="Ex: Câmera Dome Intelbras HD" required>
+                    </div>
+                </div>
 
-<section class="panel service-list">
-    <div class="panel-header">Produtos cadastrados</div>
-    <div class="table-wrapper">
-        <table>
+                <div class="form-col col-3">
+                    <div class="field-group">
+                        <label for="quantidade">Quantidade em Estoque *</label>
+                        <input id="quantidade" type="number" name="quantidade" min="0" value="{% if produto %}{{ produto.quantidade }}{% endif %}" placeholder="0" required>
+                    </div>
+                </div>
+
+                <div class="form-col col-3">
+                    <div class="field-group">
+                        <label for="preco">Preço Unitário (R$) *</label>
+                        <input id="preco" type="number" step="0.01" name="preco" min="0" value="{% if produto %}{{ produto.preco }}{% endif %}" placeholder="0,00" required>
+                    </div>
+                </div>
+            </div>
+
+            <div style="display: flex; gap: 10px; margin-top: 20px;">
+                <button type="submit" class="btn-green">
+                    <i class="fas fa-check"></i> {% if produto %}Salvar Atualização{% else %}Salvar Produto{% endif %}
+                </button>
+                {% if produto %}
+                    <a class="btn-gray" href="{% url 'produtos' %}">Cancelar</a>
+                {% else %}
+                    <a class="btn-gray" href="{% url 'index' %}">Cancelar</a>
+                {% endif %}
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Card de Listagem de Estoque -->
+<div class="admin-card">
+    <div class="admin-card-header">
+        <span><i class="fas fa-boxes text-muted me-2"></i> Produtos em Estoque</span>
+        <span style="font-size: 0.8rem; color: #888;">{{ produtos|length }} produto(s)</span>
+    </div>
+
+    <div style="overflow-x: auto;">
+        <table class="admin-table">
             <thead>
-                <tr><th>Produto</th><th>Quantidade</th><th>Preço</th><th>Ações</th></tr>
+                <tr>
+                    <th>Equipamento / Material</th>
+                    <th style="width: 150px; text-align: center;">Quantidade</th>
+                    <th style="width: 180px; text-align: right;">Preço Unitário</th>
+                    <th style="width: 120px; text-align: right;">Ações</th>
+                </tr>
             </thead>
             <tbody>
                 {% for item in produtos %}
                     <tr>
-                        <td>{{ item.nome }}</td>
-                        <td>{{ item.quantidade }}</td>
-                        <td>R$ {{ item.preco }}</td>
-                        <td><a href="{% url 'editar_produto' item.id %}">Editar</a></td>
+                        <td style="color: #fff; font-weight: 500;">{{ item.nome }}</td>
+                        <td style="text-align: center;">
+                            <span class="badge-stock {% if item.quantidade == 0 %}badge-stock-low{% endif %}">
+                                {{ item.quantidade }} un
+                            </span>
+                        </td>
+                        <td style="text-align: right; color: #00bc8c; font-weight: 600;">
+                            R$ {{ item.preco }}
+                        </td>
+                        <td style="text-align: right;">
+                            <a class="link-edit" href="{% url 'editar_produto' item.id %}">
+                                <i class="fas fa-edit me-1"></i> Editar
+                            </a>
+                        </td>
                     </tr>
                 {% empty %}
-                    <tr><td colspan="4">Nenhum produto cadastrado.</td></tr>
+                    <tr>
+                        <td colspan="4" style="text-align: center; color: #777; padding: 24px;">
+                            Nenhum produto cadastrado no momento.
+                        </td>
+                    </tr>
                 {% endfor %}
             </tbody>
         </table>
     </div>
-</section>
+</div>
 {% endblock %}

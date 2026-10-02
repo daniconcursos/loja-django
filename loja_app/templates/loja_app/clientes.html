@@ -1,89 +1,174 @@
 {% extends 'loja_app/base.html' %}
 
 {% block content %}
-<section class="panel">
-    <div class="panel-header">
-        {% if cliente %}Editar Cliente{% else %}Cadastrar Cliente{% endif %}
+<div style="margin-bottom: 20px;">
+    <h2 style="font-weight: 600; color: #fff; font-size: 1.4rem;">Gestão de Clientes</h2>
+    <span style="color: #888; font-size: 0.85rem;">Cadastre e consulte clientes com autopreenchimento de CEP</span>
+</div>
+
+<!-- Card de Formulário (Mesmo estilo, inputs e botões do Admin) -->
+<div class="admin-card">
+    <div class="admin-card-header">
+        <span>{% if cliente %}Editar Cadastro{% else %}Novo Cadastro de Cliente{% endif %}</span>
+        <span id="cep-status" style="display: none; font-size: 0.8rem; color: #00bc8c;">
+            <i class="fas fa-spinner fa-spin"></i> Consultando ViaCEP...
+        </span>
     </div>
 
-    <form method="post">
-        {% csrf_token %}
+    <div class="admin-card-body">
+        <form method="post" id="formCliente">
+            {% csrf_token %}
 
-        <label for="nome">Nome</label>
-        <input id="nome" type="text" name="nome" value="{% if cliente %}{{ cliente.nome }}{% endif %}" required>
-        <label for="telefone">Telefone</label>
-        <input id="telefone" type="text" name="telefone" value="{% if cliente %}{{ cliente.telefone }}{% endif %}" required>
-        <label for="cep">CEP</label>
-        <input id="cep" type="text" name="cep" value="{% if cliente %}{{ cliente.cep }}{% endif %}" required>
-        <label for="rua">Rua</label>
-        <input id="rua" type="text" name="rua" value="{% if cliente %}{{ cliente.rua }}{% endif %}" required>
-        <label for="numero">Número</label>
-        <input id="numero" type="text" name="numero" value="{% if cliente %}{{ cliente.numero }}{% endif %}">
-        <label for="bairro">Bairro</label>
-        <input id="bairro" type="text" name="bairro" value="{% if cliente %}{{ cliente.bairro }}{% endif %}" required>
-        <label for="cidade">Cidade</label>
-        <input id="cidade" type="text" name="cidade" value="{% if cliente %}{{ cliente.cidade }}{% endif %}" required>
-        <label for="estado">Estado</label>
-        <input id="estado" type="text" name="estado" maxlength="2" value="{% if cliente %}{{ cliente.estado }}{% endif %}" required>
+            <div class="form-row">
+                <div class="form-col col-8">
+                    <div class="field-group">
+                        <label for="nome">Nome Completo / Razão Social *</label>
+                        <input id="nome" type="text" name="nome" value="{% if cliente %}{{ cliente.nome }}{% endif %}" placeholder="Ex: Roberto Carlos" required>
+                    </div>
+                </div>
 
-        <div class="form-actions">
-            <button type="submit">{% if cliente %}Salvar atualização{% else %}Salvar{% endif %}</button>
-            {% if cliente %}
-                <a class="cancel-button" href="{% url 'clientes' %}">Cancelar</a>
-            {% else %}
-                <a class="cancel-button" href="{% url 'index' %}">Cancelar</a>
-            {% endif %}
-        </div>
-    </form>
-</section>
+                <div class="form-col col-4">
+                    <div class="field-group">
+                        <label for="telefone">Telefone / WhatsApp *</label>
+                        <input id="telefone" type="text" name="telefone" value="{% if cliente %}{{ cliente.telefone }}{% endif %}" placeholder="(17) 99999-9999" required>
+                    </div>
+                </div>
 
-<section class="panel service-list">
-    <div class="panel-header">Clientes cadastrados</div>
-    <div class="table-wrapper">
-        <table>
+                <div class="form-col col-3">
+                    <div class="field-group">
+                        <label for="cep">CEP *</label>
+                        <input id="cep" type="text" name="cep" maxlength="9" value="{% if cliente %}{{ cliente.cep }}{% endif %}" placeholder="15115-000" required>
+                    </div>
+                </div>
+
+                <!-- Rua com espaço confortável -->
+                <div class="form-col col-7">
+                    <div class="field-group">
+                        <label for="rua">Rua / Logradouro *</label>
+                        <input id="rua" type="text" name="rua" value="{% if cliente %}{{ cliente.rua }}{% endif %}" placeholder="Preenchimento automático" required>
+                    </div>
+                </div>
+
+                <div class="form-col col-2">
+                    <div class="field-group">
+                        <label for="numero">Número</label>
+                        <input id="numero" type="text" name="numero" value="{% if cliente %}{{ cliente.numero }}{% endif %}" placeholder="Ex: 120">
+                    </div>
+                </div>
+
+                <div class="form-col col-5">
+                    <div class="field-group">
+                        <label for="bairro">Bairro *</label>
+                        <input id="bairro" type="text" name="bairro" value="{% if cliente %}{{ cliente.bairro }}{% endif %}" placeholder="Preenchimento automático" required>
+                    </div>
+                </div>
+
+                <div class="form-col col-5">
+                    <div class="field-group">
+                        <label for="cidade">Cidade *</label>
+                        <input id="cidade" type="text" name="cidade" value="{% if cliente %}{{ cliente.cidade }}{% endif %}" placeholder="Preenchimento automático" required>
+                    </div>
+                </div>
+
+                <div class="form-col col-2">
+                    <div class="field-group">
+                        <label for="estado">Estado (UF) *</label>
+                        <input id="estado" type="text" name="estado" maxlength="2" value="{% if cliente %}{{ cliente.estado }}{% endif %}" placeholder="SP" required>
+                    </div>
+                </div>
+            </div>
+
+            <div style="display: flex; gap: 10px; margin-top: 20px;">
+                <button type="submit" class="btn-green">
+                    <i class="fas fa-check"></i> {% if cliente %}Atualizar{% else %}Salvar Cliente{% endif %}
+                </button>
+                {% if cliente %}
+                    <a class="btn-gray" href="{% url 'clientes' %}">Cancelar</a>
+                {% else %}
+                    <a class="btn-gray" href="{% url 'index' %}">Cancelar</a>
+                {% endif %}
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Card de Listagem de Clientes -->
+<div class="admin-card">
+    <div class="admin-card-header">
+        <span>Clientes Registrados</span>
+        <span style="font-size: 0.8rem; color: #888;">{{ clientes|length }} cadastrado(s)</span>
+    </div>
+
+    <div style="overflow-x: auto;">
+        <table class="admin-table">
             <thead>
-                <tr><th>Nome</th><th>Telefone</th><th>Cidade</th><th>Ações</th></tr>
+                <tr>
+                    <th>Nome</th>
+                    <th>Telefone</th>
+                    <th>Localização</th>
+                    <th style="text-align: right;">Ação</th>
+                </tr>
             </thead>
             <tbody>
                 {% for item in clientes %}
                     <tr>
-                        <td>{{ item.nome }}</td>
+                        <td style="color: #fff; font-weight: 500;">{{ item.nome }}</td>
                         <td>{{ item.telefone }}</td>
-                        <td>{{ item.cidade }} - {{ item.estado }}</td>
-                        <td><a href="{% url 'editar_cliente' item.id %}">Editar</a></td>
+                        <td><span class="badge-loc">{{ item.cidade }} - {{ item.estado }}</span></td>
+                        <td style="text-align: right;">
+                            <a class="link-edit" href="{% url 'editar_cliente' item.id %}">Editar</a>
+                        </td>
                     </tr>
                 {% empty %}
-                    <tr><td colspan="4">Nenhum cliente cadastrado.</td></tr>
+                    <tr>
+                        <td colspan="4" style="text-align: center; color: #777; padding: 20px;">
+                            Nenhum cliente cadastrado no momento.
+                        </td>
+                    </tr>
                 {% endfor %}
             </tbody>
         </table>
     </div>
-</section>
+</div>
 
+<!-- Script ViaCEP -->
 <script>
-    document.getElementById('cep').addEventListener('blur', function () {
-        let cep = this.value.replace(/\D/g, '');
+    document.addEventListener('DOMContentLoaded', function () {
+        const cepInput = document.getElementById('cep');
+        const statusSpan = document.getElementById('cep-status');
 
-        if (cep.length !== 8) {
-            return;
-        }
+        if (!cepInput) return;
 
-        fetch(`https://viacep.com.br/ws/${cep}/json/`)
-            .then(response => response.json())
-            .then(data => {
-                if (data.erro) {
-                    alert("CEP não encontrado.");
-                    return;
-                }
+        cepInput.addEventListener('blur', function () {
+            let cep = this.value.replace(/\D/g, '');
 
-                document.getElementById('rua').value = data.logradouro || '';
-                document.getElementById('bairro').value = data.bairro || '';
-                document.getElementById('cidade').value = data.localidade || '';
-                document.getElementById('estado').value = data.uf || '';
-            })
-            .catch(() => {
-                alert("Erro ao buscar o CEP.");
-            });
+            if (cep.length !== 8) return;
+
+            if (statusSpan) statusSpan.style.display = 'inline-block';
+
+            fetch(`https://viacep.com.br/ws/${cep}/json/`)
+                .then(response => response.json())
+                .then(data => {
+                    if (statusSpan) statusSpan.style.display = 'none';
+
+                    if (data.erro) {
+                        alert("CEP não localizado pelo ViaCEP.");
+                        return;
+                    }
+
+                    document.getElementById('rua').value = data.logradouro || '';
+                    document.getElementById('bairro').value = data.bairro || '';
+                    document.getElementById('cidade').value = data.localidade || '';
+                    document.getElementById('estado').value = data.uf || '';
+
+                    const numInput = document.getElementById('numero');
+                    if (numInput) numInput.focus();
+                })
+                .catch(() => {
+                    if (statusSpan) statusSpan.style.display = 'none';
+                    alert("Erro ao consultar o serviço do ViaCEP.");
+                });
+        });
     });
 </script>
 {% endblock %}
